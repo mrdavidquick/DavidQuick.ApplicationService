@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
 using Moq;
-using Services.AdministratorOne.Abstractions.Model;
 using Services.Applications.ProcessorStrategy;
+using Services.Common.Abstractions.Abstractions;
 using Services.Common.Abstractions.Model;
 using Services.KnowYourCustomer;
 using Xunit;
@@ -31,13 +31,13 @@ public class ProductTwoTests
 
         var mockKycService = new Mock<IKnowYourCustomerService>();
         mockKycService.Setup(x => x.PerformKycCheck(It.IsAny<User>()))
-            .ReturnsAsync(KycStatus.Verified);
+            .ReturnsAsync(new KycResult(KycStatus.Verified));
 
         AdministratorServiceLocator.RegisterService<IAdministratorTwo.IAdministrationService>(mockAdministratorTwo.Object);
 
         var applicationProcessorStrategyFactory = new ApplicationProcessorStrategyFactory();
 
-        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory, mockKycService.Object);
+        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory, mockKycService.Object, new Mock<IBus>().Object);
 
         var result = await processor.Process(application);
 
@@ -65,13 +65,13 @@ public class ProductTwoTests
 
         var mockKycService = new Mock<IKnowYourCustomerService>();
         mockKycService.Setup(x => x.PerformKycCheck(It.IsAny<User>()))
-            .ReturnsAsync(KycStatus.Verified);
+            .ReturnsAsync(new KycResult(KycStatus.Verified));
 
         AdministratorServiceLocator.RegisterService<IAdministratorTwo.IAdministrationService>(mockAdministratorTwo.Object);
 
         var applicationProcessorStrategyFactory = new ApplicationProcessorStrategyFactory();
 
-        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory, mockKycService.Object);
+        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory, mockKycService.Object, new Mock<IBus>().Object);
 
         var result = await processor.Process(application);
 
@@ -101,13 +101,13 @@ public class ProductTwoTests
 
         var mockKycService = new Mock<IKnowYourCustomerService>();
         mockKycService.Setup(x => x.PerformKycCheck(It.IsAny<User>()))
-            .ReturnsAsync(KycStatus.Verified);
+            .ReturnsAsync(new KycResult(KycStatus.Verified));
 
         AdministratorServiceLocator.RegisterService<IAdministratorTwo.IAdministrationService>(mockAdministratorTwo.Object);
 
         var applicationProcessorStrategyFactory = new ApplicationProcessorStrategyFactory();
 
-        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory, mockKycService.Object);
+        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory, mockKycService.Object, new Mock<IBus>().Object);
 
         var result = await processor.Process(application);
 
@@ -138,13 +138,13 @@ public class ProductTwoTests
 
         var mockKycService = new Mock<IKnowYourCustomerService>();
         mockKycService.Setup(x => x.PerformKycCheck(It.IsAny<User>()))
-            .ReturnsAsync(KycStatus.NotVerified);
+            .ReturnsAsync(new KycResult(KycStatus.NotVerified, Guid.NewGuid()));
 
         AdministratorServiceLocator.RegisterService<IAdministratorTwo.IAdministrationService>(mockAdministratorTwo.Object);
 
         var applicationProcessorStrategyFactory = new ApplicationProcessorStrategyFactory();
 
-        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory, mockKycService.Object);
+        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory, mockKycService.Object, new Mock<IBus>().Object);
 
         var result = await processor.Process(application);
 

@@ -4,5 +4,5 @@ namespace Services.KnowYourCustomer;
 
 public interface IKnowYourCustomerService
 {
-    Task<KycStatus> PerformKycCheck(User user);
+    Task<KycResult> PerformKycCheck(User user);
 }
