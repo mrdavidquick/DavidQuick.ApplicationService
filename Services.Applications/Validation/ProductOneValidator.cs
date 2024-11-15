@@ -11,6 +11,11 @@ namespace Services.Applications.Validation
                 .Must(BeWithinValidAgeRange)
                 .WithErrorCode(ErrorConstants.ApplicantAgeInvalid)
                 .WithMessage(ErrorConstants.ApplicantNameInvalidDescription);
+
+            RuleFor(application => application.Payment)
+                .Must(BeWithinValidPaymentRange)
+                .WithErrorCode(ErrorConstants.PaymentAmountInvalid)
+                .WithMessage(ErrorConstants.PaymentAmountInvalidDescription);
         }
 
         private static bool BeWithinValidAgeRange(DateOnly dateOfBirth)
@@ -31,6 +36,11 @@ namespace Services.Applications.Validation
             }
 
             return age;
+        }
+
+        private static bool BeWithinValidPaymentRange(Payment payment)
+        {
+            return payment.Amount.Amount is >= 0.99m;
         }
     }
 }
