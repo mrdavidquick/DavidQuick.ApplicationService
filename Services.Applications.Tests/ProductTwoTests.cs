@@ -111,6 +111,7 @@ public class ProductTwoTests
 
         var result = await processor.Process(application);
 
+        mockAdministratorTwo.Verify(x => x.CreateInvestorAsync(It.IsAny<User>()), Times.Never);
         result.IsSuccess.Should().BeFalse();
         result.Error.System.Should().Be(Constants.SystemName);
         result.Error.Code.Should().Be(ErrorConstants.PaymentAmountInvalid);

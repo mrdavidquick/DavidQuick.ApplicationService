@@ -147,6 +147,7 @@ public class ProductOneTests
 
         var result = await processor.Process(application);
 
+        mockAdministratorOne.Verify(x => x.CreateInvestor(It.IsAny<CreateInvestorRequest>()), Times.Never);
         result.IsSuccess.Should().BeFalse();
         result.Error.System.Should().Be(Constants.SystemName);
         result.Error.Code.Should().Be(ErrorConstants.PaymentAmountInvalid);
