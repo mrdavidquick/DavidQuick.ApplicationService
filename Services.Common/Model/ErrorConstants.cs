@@ -7,5 +7,8 @@
 
         public const string PaymentAmountInvalid = "Payment.AmountInvalid";
         public const string PaymentAmountInvalidDescription = "The minimum payment is £0.99.";
+
+        public const string KycNotVerified = "Kyc.NotVerified";
+        public const string KycNotVerifiedDescription = "Only users that have been KYC verified can be processed.";
     }
 }

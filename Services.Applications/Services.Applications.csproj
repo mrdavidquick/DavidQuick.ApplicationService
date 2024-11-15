@@ -14,6 +14,7 @@
       <ProjectReference Include="..\Services.AdministratorOne.Abstractions\Services.AdministratorOne.Abstractions.csproj" />
       <ProjectReference Include="..\Services.AdministratorTwo.Abstractions\Services.AdministratorTwo.Abstractions.csproj" />
       <ProjectReference Include="..\Services.Common\Services.Common.csproj" />
+      <ProjectReference Include="..\Services.KnowYourCustomer\Services.KnowYourCustomer.csproj" />
     </ItemGroup>
 
 </Project>

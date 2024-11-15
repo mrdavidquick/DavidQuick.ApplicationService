@@ -3,6 +3,7 @@ using Moq;
 using Services.AdministratorOne.Abstractions.Model;
 using Services.Applications.ProcessorStrategy;
 using Services.Common.Abstractions.Model;
+using Services.KnowYourCustomer;
 using Xunit;
 using IAdministratorOne = Services.AdministratorOne.Abstractions;
 
@@ -28,11 +29,15 @@ public class ProductOneTests
         mockAdministratorOne.Setup(x => x.CreateInvestor(It.IsAny<CreateInvestorRequest>()))
             .Returns(new CreateInvestorResponse());
 
+        var mockKycService = new Mock<IKnowYourCustomerService>();
+        mockKycService.Setup(x => x.PerformKycCheck(It.IsAny<User>()))
+            .ReturnsAsync(KycStatus.Verified);
+
         AdministratorServiceLocator.RegisterService<IAdministratorOne.IAdministrationService>(mockAdministratorOne.Object);
 
         var applicationProcessorStrategyFactory = new ApplicationProcessorStrategyFactory();
 
-        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory);
+        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory, mockKycService.Object);
 
         var result = await processor.Process(application);
 
@@ -58,11 +63,15 @@ public class ProductOneTests
         mockAdministratorOne.Setup(x => x.CreateInvestor(It.IsAny<CreateInvestorRequest>()))
             .Returns(new CreateInvestorResponse());
 
+        var mockKycService = new Mock<IKnowYourCustomerService>();
+        mockKycService.Setup(x => x.PerformKycCheck(It.IsAny<User>()))
+            .ReturnsAsync(KycStatus.Verified);
+
         AdministratorServiceLocator.RegisterService<IAdministratorOne.IAdministrationService>(mockAdministratorOne.Object);
 
         var applicationProcessorStrategyFactory = new ApplicationProcessorStrategyFactory();
 
-        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory);
+        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory, mockKycService.Object);
 
         var result = await processor.Process(application);
 
@@ -90,11 +99,15 @@ public class ProductOneTests
         mockAdministratorOne.Setup(x => x.CreateInvestor(It.IsAny<CreateInvestorRequest>()))
             .Returns(new CreateInvestorResponse());
 
+        var mockKycService = new Mock<IKnowYourCustomerService>();
+        mockKycService.Setup(x => x.PerformKycCheck(It.IsAny<User>()))
+            .ReturnsAsync(KycStatus.Verified);
+
         AdministratorServiceLocator.RegisterService<IAdministratorOne.IAdministrationService>(mockAdministratorOne.Object);
 
         var applicationProcessorStrategyFactory = new ApplicationProcessorStrategyFactory();
 
-        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory);
+        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory, mockKycService.Object);
 
         var result = await processor.Process(application);
 
@@ -122,11 +135,15 @@ public class ProductOneTests
         mockAdministratorOne.Setup(x => x.CreateInvestor(It.IsAny<CreateInvestorRequest>()))
             .Returns(new CreateInvestorResponse());
 
+        var mockKycService = new Mock<IKnowYourCustomerService>();
+        mockKycService.Setup(x => x.PerformKycCheck(It.IsAny<User>()))
+            .ReturnsAsync(KycStatus.Verified);
+
         AdministratorServiceLocator.RegisterService<IAdministratorOne.IAdministrationService>(mockAdministratorOne.Object);
 
         var applicationProcessorStrategyFactory = new ApplicationProcessorStrategyFactory();
 
-        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory);
+        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory, mockKycService.Object);
 
         var result = await processor.Process(application);
 
@@ -134,5 +151,42 @@ public class ProductOneTests
         result.Error.System.Should().Be(Constants.SystemName);
         result.Error.Code.Should().Be(ErrorConstants.PaymentAmountInvalid);
         result.Error.Description.Should().Be(ErrorConstants.PaymentAmountInvalidDescription);
+    }
+
+    [Fact]
+    public async Task Application_for_ProductOne_returns_error_when_user_is_not_KYC_verified()
+    {
+        var application = new Application
+        {
+            Id = Guid.NewGuid(),
+            ProductCode = ProductCode.ProductOne,
+            Applicant = new User
+            {
+                DateOfBirth = new DateOnly(DateTime.Today.AddYears(-20).Year, 1, 1)
+            },
+            Payment = new Payment(new BankAccount(), new Money("", 100m))
+        };
+
+        var mockAdministratorOne = new Mock<IAdministratorOne.IAdministrationService>();
+        mockAdministratorOne.Setup(x => x.CreateInvestor(It.IsAny<CreateInvestorRequest>()))
+            .Returns(new CreateInvestorResponse());
+
+        var mockKycService = new Mock<IKnowYourCustomerService>();
+        mockKycService.Setup(x => x.PerformKycCheck(It.IsAny<User>()))
+            .ReturnsAsync(KycStatus.NotVerified);
+
+        AdministratorServiceLocator.RegisterService<IAdministratorOne.IAdministrationService>(mockAdministratorOne.Object);
+
+        var applicationProcessorStrategyFactory = new ApplicationProcessorStrategyFactory();
+
+        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory, mockKycService.Object);
+
+        var result = await processor.Process(application);
+
+        mockAdministratorOne.Verify(x => x.CreateInvestor(It.IsAny<CreateInvestorRequest>()), Times.Never);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.System.Should().Be(Constants.SystemName);
+        result.Error.Code.Should().Be(ErrorConstants.KycNotVerified);
+        result.Error.Description.Should().Be(ErrorConstants.KycNotVerifiedDescription);
     }
 }
