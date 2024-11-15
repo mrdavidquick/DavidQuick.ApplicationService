@@ -4,5 +4,5 @@ namespace Services.Common.Abstractions.Abstractions;
 
 public interface IApplicationProcessor  
 {
-    Task Process(Application application);
+    Task<Result<InvestorAccount>> Process(Application application);
 }

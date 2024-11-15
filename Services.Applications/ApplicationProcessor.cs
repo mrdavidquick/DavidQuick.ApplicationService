@@ -5,7 +5,7 @@ namespace Services.Applications;
 
 public class ApplicationProcessor : IApplicationProcessor
 {
-    public Task Process(Application application)
+    public async Task<Result<InvestorAccount>> Process(Application application)
     {
         throw new NotImplementedException();
     }
