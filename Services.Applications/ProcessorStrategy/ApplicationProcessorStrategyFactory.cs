@@ -7,8 +7,15 @@ public class ApplicationProcessorStrategyFactory : IApplicationProcessorStrategy
 {
     public IApplicationProcessorStrategy Create(ProductCode productCode)
     {
-        return new ProductOneApplicationProcessorStrategy(
-            AdministratorServiceLocator.GetService<AdministratorOne.Abstractions.IAdministrationService>(),
-            new ProductOneValidator());
+        return productCode switch
+        {
+            ProductCode.ProductOne => new ProductOneApplicationProcessorStrategy(
+                AdministratorServiceLocator.GetService<AdministratorOne.Abstractions.IAdministrationService>(),
+                new ProductOneValidator()),
+            ProductCode.ProductTwo => new ProductTwoApplicationProcessorStrategy(
+                AdministratorServiceLocator.GetService<AdministratorTwo.Abstractions.IAdministrationService>(),
+                new ProductTwoValidator()),
+            _ => throw new ArgumentOutOfRangeException(nameof(productCode), productCode, null)
+        };
     }
 }
