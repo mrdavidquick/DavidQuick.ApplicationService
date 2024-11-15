@@ -1,11 +1,14 @@
 ﻿using FluentValidation;
 using FluentValidation.Results;
+using Services.Common.Abstractions.Abstractions;
 using Services.Common.Abstractions.Model;
 
 namespace Services.Applications.ProcessorStrategy;
 
 public sealed class ProductTwoApplicationProcessorStrategy
-    (AdministratorTwo.Abstractions.IAdministrationService administrationService, IValidator<Application> validator) 
+    (AdministratorTwo.Abstractions.IAdministrationService administrationService, 
+        IValidator<Application> validator,
+        IBus serviceBus) 
     : IApplicationProcessorStrategy
 {
     public async Task<Result<InvestorAccount>> Process(Application application)
@@ -16,7 +19,19 @@ public sealed class ProductTwoApplicationProcessorStrategy
 
         var user = new User();
 
-        _ = await administrationService.CreateInvestorAsync(user);
+        var investorResult = await administrationService.CreateInvestorAsync(user);
+
+        if(!investorResult.IsSuccess) return Result.Failure<InvestorAccount>(new Error("","", ""));
+
+        await serviceBus.PublishAsync(new InvestorCreated(application.Applicant.Id, investorResult.Value.ToString()));
+
+        var accountResult = await administrationService.CreateAccountAsync(investorResult.Value, application.ProductCode);
+        if (!accountResult.IsSuccess) return Result.Failure<InvestorAccount>(new Error("", "", ""));
+
+        await serviceBus.PublishAsync(new AccountCreated(investorResult.Value.ToString(), application.ProductCode,
+            accountResult.Value.ToString()));
+
+        _ = await administrationService.ProcessPaymentAsync(accountResult.Value, application.Payment);
 
         return await Task.FromResult(Result.Success(
             new InvestorAccount(AdministratorCode.AdministratorOne)));

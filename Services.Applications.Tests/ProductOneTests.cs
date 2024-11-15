@@ -10,6 +10,7 @@ using IAdministratorOne = Services.AdministratorOne.Abstractions;
 
 namespace Services.Applications.Tests;
 
+[Collection("Non-Parallel Test Collection")]
 public class ProductOneTests
 {
     [Fact]

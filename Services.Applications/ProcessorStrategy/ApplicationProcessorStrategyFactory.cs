@@ -16,7 +16,8 @@ public class ApplicationProcessorStrategyFactory : IApplicationProcessorStrategy
                 AdministratorServiceLocator.GetService<IBus>()),
             ProductCode.ProductTwo => new ProductTwoApplicationProcessorStrategy(
                 AdministratorServiceLocator.GetService<AdministratorTwo.Abstractions.IAdministrationService>(),
-                new ProductTwoValidator()),
+                new ProductTwoValidator(),
+                AdministratorServiceLocator.GetService<IBus>()),
             _ => throw new ArgumentOutOfRangeException(nameof(productCode), productCode, null)
         };
     }

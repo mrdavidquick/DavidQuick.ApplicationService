@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Moq;
+using Services.AdministratorOne.Abstractions.Model;
 using Services.Applications.ProcessorStrategy;
 using Services.Common.Abstractions.Abstractions;
 using Services.Common.Abstractions.Model;
@@ -9,6 +10,7 @@ using IAdministratorTwo = Services.AdministratorTwo.Abstractions;
 
 namespace Services.Applications.Tests;
 
+[Collection("Non-Parallel Test Collection")]
 public class ProductTwoTests
 {
     [Fact]
@@ -28,12 +30,17 @@ public class ProductTwoTests
         var mockAdministratorTwo = new Mock<IAdministratorTwo.IAdministrationService>();
         mockAdministratorTwo.Setup(x => x.CreateInvestorAsync(It.IsAny<User>()))
             .ReturnsAsync(Result.Success(Guid.NewGuid()));
+        mockAdministratorTwo.Setup(x => x.CreateAccountAsync(It.IsAny<Guid>(), ProductCode.ProductTwo))
+            .ReturnsAsync(Result.Success(Guid.NewGuid()));
 
         var mockKycService = new Mock<IKnowYourCustomerService>();
         mockKycService.Setup(x => x.PerformKycCheck(It.IsAny<User>()))
             .ReturnsAsync(new KycResult(KycStatus.Verified));
 
+        var mockBus = new Mock<IBus>();
+
         AdministratorServiceLocator.RegisterService<IAdministratorTwo.IAdministrationService>(mockAdministratorTwo.Object);
+        AdministratorServiceLocator.RegisterService<IBus>(mockBus.Object);
 
         var applicationProcessorStrategyFactory = new ApplicationProcessorStrategyFactory();
 
@@ -119,7 +126,7 @@ public class ProductTwoTests
     }
 
     [Fact]
-    public async Task Application_for_ProductOne_returns_error_when_user_is_not_KYC_verified()
+    public async Task Application_for_ProductTwo_returns_error_when_user_is_not_KYC_verified()
     {
         var application = new Application
         {
@@ -153,5 +160,49 @@ public class ProductTwoTests
         result.Error.System.Should().Be(Constants.SystemName);
         result.Error.Code.Should().Be(ErrorConstants.KycNotVerified);
         result.Error.Description.Should().Be(ErrorConstants.KycNotVerifiedDescription);
+    }
+
+    [Fact]
+    public async Task Application_for_ProductTwo_publishes_domain_events_to_the_bus_when_successful()
+    {
+        var application = new Application
+        {
+            Id = Guid.NewGuid(),
+            ProductCode = ProductCode.ProductTwo,
+            Applicant = new User
+            {
+                DateOfBirth = new DateOnly(DateTime.Today.AddYears(-20).Year, 1, 1)
+            },
+            Payment = new Payment(new BankAccount(), new Money("", 100m))
+        };
+
+        var mockAdministratorTwo = new Mock<IAdministratorTwo.IAdministrationService>();
+        mockAdministratorTwo.Setup(x => x.CreateInvestorAsync(It.IsAny<User>()))
+            .ReturnsAsync(Result.Success(Guid.NewGuid()));
+        mockAdministratorTwo.Setup(x => x.CreateAccountAsync(It.IsAny<Guid>(), ProductCode.ProductTwo))
+            .ReturnsAsync(Result.Success(Guid.NewGuid()));
+
+        var mockKycService = new Mock<IKnowYourCustomerService>();
+        mockKycService.Setup(x => x.PerformKycCheck(It.IsAny<User>()))
+            .ReturnsAsync(new KycResult(KycStatus.Verified));
+
+        var mockBus = new Mock<IBus>();
+        mockBus.Setup(x => x.PublishAsync(It.IsAny<InvestorCreated>()));
+        mockBus.Setup(x => x.PublishAsync(It.IsAny<AccountCreated>()));
+        mockBus.Setup(x => x.PublishAsync(It.IsAny<ApplicationCompleted>()));
+
+        AdministratorServiceLocator.RegisterService<IAdministratorTwo.IAdministrationService>(mockAdministratorTwo.Object);
+        AdministratorServiceLocator.RegisterService<IBus>(mockBus.Object);
+
+        var applicationProcessorStrategyFactory = new ApplicationProcessorStrategyFactory();
+
+        var processor = new ApplicationProcessor(applicationProcessorStrategyFactory, mockKycService.Object, mockBus.Object);
+
+        var result = await processor.Process(application);
+
+        result.IsSuccess.Should().BeTrue();
+        mockBus.Verify(b => b.PublishAsync(It.IsAny<InvestorCreated>()), Times.Once);
+        mockBus.Verify(b => b.PublishAsync(It.IsAny<AccountCreated>()), Times.Once);
+        mockBus.Verify(b => b.PublishAsync(It.IsAny<ApplicationCompleted>()), Times.Once);
     }
 }
