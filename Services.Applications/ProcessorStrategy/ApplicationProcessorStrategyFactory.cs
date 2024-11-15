@@ -1,4 +1,5 @@
-﻿using Services.Common.Abstractions.Model;
+﻿using Services.Applications.Validation;
+using Services.Common.Abstractions.Model;
 
 namespace Services.Applications.ProcessorStrategy;
 
@@ -6,6 +7,8 @@ public class ApplicationProcessorStrategyFactory : IApplicationProcessorStrategy
 {
     public IApplicationProcessorStrategy Create(ProductCode productCode)
     {
-        return new ProductOneApplicationProcessorStrategy(AdministratorServiceLocator.GetService<AdministratorOne.Abstractions.IAdministrationService>());
+        return new ProductOneApplicationProcessorStrategy(
+            AdministratorServiceLocator.GetService<AdministratorOne.Abstractions.IAdministrationService>(),
+            new ProductOneValidator());
     }
 }

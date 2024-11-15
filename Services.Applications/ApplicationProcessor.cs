@@ -4,7 +4,8 @@ using Services.Common.Abstractions.Model;
 
 namespace Services.Applications;
 
-public class ApplicationProcessor(IApplicationProcessorStrategyFactory applicationProcessorStrategyFactory) : IApplicationProcessor
+public class ApplicationProcessor(
+    IApplicationProcessorStrategyFactory applicationProcessorStrategyFactory) : IApplicationProcessor
 {
     public async Task<Result<InvestorAccount>> Process(Application application)
     {
